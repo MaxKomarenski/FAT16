@@ -75,9 +75,7 @@ int main() {
             {"signature value", std::pair<int, int>(510,511)}};
 
     size_t sectorSize = 512;
-    std::cout << "work" << std::endl;
     std::vector<uint8_t> bytes = read_image_of_fat16("../hd0_just_FAT16_without_MBR.img");
-
 
     std::cout<<"Sector size: " << sectorSize << std::endl;
     std::cout<<"Sectors per cluster: " << set_range(get_info(bytes, bootOptions["sectors per cluster"])) << std::endl;
@@ -86,6 +84,10 @@ int main() {
     std::cout<<"Root size: "<< set_range(get_info(bytes, bootOptions["max number of files in root directory"])) << std::endl; //TODO
     std::cout<<"Reserved sectors: " << set_range(get_info(bytes, bootOptions["size of reserved area"])) << std::endl;
 
+
+    int where_files_start = std::stoi(set_range(get_info(bytes, bootOptions["bytes per sector"]))) * std::stoi(set_range(get_info(bytes, bootOptions["size of reserved area"]))) +
+                        std::stoi(set_range(get_info(bytes, bootOptions["number of FATs"]))) * std::stoi(set_range(get_info(bytes, bootOptions["size of each FAT"]))) *
+                        std::stoi(set_range(get_info(bytes, bootOptions["bytes per sector"])));
 
 
     return 0;
