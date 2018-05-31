@@ -4,30 +4,8 @@
 #include <sstream>
 #include <cstring>
 #include <map>
+#include <iterator>
 
-struct boot {
-    std::pair<long, long> text_identifier_OS = std::make_pair(0, 3);
-    std::pair<long, long> machine_instruction = std::make_pair(3, 8);
-    std::pair<long, long> BytesPerSector = std::make_pair(11, 2);//512
-    std::pair<long, long> SectorPerCluster = std::make_pair(13, 1);
-    std::pair<long, long> ReservedSector = std::make_pair(14, 2);
-    std::pair<long, long> NumberOfFAts = std::make_pair(16, 1);
-    std::pair<long, long> RootEntries = std::make_pair(17, 2);
-    std::pair<long, long> MediaDescriptor = std::make_pair(21, 1);
-    std::pair<long, long> SectorPerFat = std::make_pair(22, 2);
-    std::pair<long, long> SectorPerTrack = std::make_pair(24, 2);
-    std::pair<long, long> Heads = std::make_pair(26, 2);
-    std::pair<long, long> HiddenSectors = std::make_pair(28, 4);
-    std::pair<long, long> BigTotalSectors = std::make_pair(32, 4);
-    std::pair<long, long> PhysicalDiscNumbers = std::make_pair(36, 1);
-    std::pair<long, long> CurrentHead = std::make_pair(37, 1);
-    std::pair<long, long> Signature = std::make_pair(38, 1);
-    std::pair<long, long> VolumeSerialNumber = std::make_pair(39, 4);
-    std::pair<long, long> VolumeLabel = std::make_pair(43, 11);
-    std::pair<long, long> SystemID = std::make_pair(54, 8);
-    std::pair<long, long> LoaderCodeArea = std::make_pair(62, 448);
-    std::pair<long, long> BootSignature = std::make_pair(510, 2);
-};
 
 std::vector<uint8_t> read_image_of_fat16(const std::string &name_of_file){
     std::vector<uint8_t> bytes;
@@ -47,6 +25,22 @@ std::vector<uint8_t> slice(std::vector<uint8_t> &vector, int m, int n) {
 
     std::vector<uint8_t> vec(first,last);
     return vec;
+}
+
+std::string set_range(std::vector<int> indexes){
+    std::ostringstream oss;
+
+    if (!indexes.empty())
+    {
+        // Convert all but the last element to avoid a trailing ","
+        std::copy(indexes.begin(), indexes.end()-1,
+                  std::ostream_iterator<int>(oss, ","));
+
+        // Now add the last element with no delimiter
+        oss << indexes.back();
+    }
+
+    return oss.str();
 }
 
 std::vector<uint8_t> get_bytes_per_sector(std::vector<uint8_t> &bytes, std::pair<int, int>byteRange){
@@ -76,23 +70,24 @@ int main() {
     size_t sectorSize = 512;
     std::cout << "work" << std::endl;
     std::vector<uint8_t> bytes = read_image_of_fat16("../hd0_just_FAT16_without_MBR.img");
+    std::vector<int> test;
+
+
+    for(int i=0; i < get_bytes_per_sector(bytes, bootOptions["sectors per cluster"]).size(); ++i){
+        test.push_back(unsigned(get_bytes_per_sector(bytes, bootOptions["sectors per cluster"])[i]));
+    }
 
     std::cout<<"Sector size: " << sectorSize << std::endl;
-    std::cout<<"Sectors per cluster: "<< (bytes.size() - sectorSize*4)/sectorSize << std::endl;
+    std::cout<<"Sectors per cluster: " << set_range(test) << std::endl;
     std::cout<<"Number of FATs: " << 2 << std::endl;
     std::cout<<"Number of FATs copies sectors/bytes:" << sectorSize*2 <<std::endl;
     std::cout<<"Root size:" << std::endl;
     std::cout<<"Reserved sectors:" << std::endl;
 
+
     /*for(int i=0 ; i<512; ++i){
         std::cout<<bytes[i];
     }*/
-
-    std::pair<int, int> ranges(16,16);
-
-    for(int i=0; i < get_bytes_per_sector(bytes, ranges).size(); ++i){
-        std::cout<<unsigned(get_bytes_per_sector(bytes, ranges)[i])<<std::endl;
-    }
 
     return 0;
 }
