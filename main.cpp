@@ -5,6 +5,7 @@
 #include <cstring>
 #include <map>
 #include <iterator>
+#include <algorithm>
 
 
 std::vector<uint8_t> read_image_of_fat16(const std::string &name_of_file){
@@ -40,15 +41,14 @@ std::string set_range(std::vector<int> indexes){
         oss << indexes.back();
     }
 
-    return oss.str();
+    std::string result = oss.str();
+    result.erase(std::remove(result.begin(), result.end(), ','), result.end());
+    return result;
 }
 
 std::vector<int> get_info(std::vector<uint8_t> &bytes, std::pair<int, int>byteRange){
     std::vector<uint8_t> sub_vector = slice(bytes, byteRange.first, byteRange.second);
     std::vector<int> test;
-    //for(int i=0; i < get_info(bytes, bootOptions["sectors per cluster"]).size(); ++i){
-    //  test.push_back(unsigned(get_info(bytes, bootOptions["sectors per cluster"])[i]));
-    //}
 
     for(int i=0; i < sub_vector.size(); ++i){
         test.push_back(unsigned(sub_vector[i]));
@@ -78,25 +78,15 @@ int main() {
     std::cout << "work" << std::endl;
     std::vector<uint8_t> bytes = read_image_of_fat16("../hd0_just_FAT16_without_MBR.img");
 
-   // hz(get_info(bytes, bootOptions["sectors per cluster"]));
-
-
-
-    //for(int i=0; i < get_info(bytes, ).size(); ++i){
-      //  test.push_back(unsigned(get_info(bytes, bootOptions["sectors per cluster"])[i]));
-    //}
 
     std::cout<<"Sector size: " << sectorSize << std::endl;
     std::cout<<"Sectors per cluster: " << set_range(get_info(bytes, bootOptions["sectors per cluster"])) << std::endl;
-    std::cout<<"Number of FATs: " << 2 << std::endl;
-    std::cout<<"Number of FATs copies sectors/bytes:" << sectorSize*2 <<std::endl;
+    std::cout<<"Number of FATs: " << set_range(get_info(bytes, bootOptions["number of FATs"])) << std::endl;
+    std::cout<<"Number of FATs copies sectors/bytes: " << set_range(get_info(bytes, bootOptions["size of each FAT"])) <<"/"<< std::stoi( set_range(get_info(bytes, bootOptions["size of each FAT"])))*512<<std::endl;
     std::cout<<"Root size:" << std::endl;
     std::cout<<"Reserved sectors:" << std::endl;
 
 
-    /*for(int i=0 ; i<512; ++i){
-        std::cout<<bytes[i];
-    }*/
 
     return 0;
 }
