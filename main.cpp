@@ -82,9 +82,9 @@ int main() {
     std::cout<<"Sector size: " << sectorSize << std::endl;
     std::cout<<"Sectors per cluster: " << set_range(get_info(bytes, bootOptions["sectors per cluster"])) << std::endl;
     std::cout<<"Number of FATs: " << set_range(get_info(bytes, bootOptions["number of FATs"])) << std::endl;
-    std::cout<<"Number of FATs copies sectors/bytes: " << set_range(get_info(bytes, bootOptions["size of each FAT"])) <<"/"<< std::stoi( set_range(get_info(bytes, bootOptions["size of each FAT"])))*512<<std::endl;
-    std::cout<<"Root size:" << std::endl;
-    std::cout<<"Reserved sectors:" << std::endl;
+    std::cout<<"Number of FATs copies sectors/bytes: " << set_range(get_info(bytes, bootOptions["size of each FAT"])) <<"/"<< std::stoi( set_range(get_info(bytes, bootOptions["size of each FAT"])))*sectorSize<<std::endl;
+    std::cout<<"Root size: "<< set_range(get_info(bytes, bootOptions["max number of files in root directory"])) << std::endl; //TODO
+    std::cout<<"Reserved sectors: " << set_range(get_info(bytes, bootOptions["size of reserved area"])) << std::endl;
 
 
 
