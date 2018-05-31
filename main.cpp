@@ -43,11 +43,18 @@ std::string set_range(std::vector<int> indexes){
     return oss.str();
 }
 
-std::vector<uint8_t> get_bytes_per_sector(std::vector<uint8_t> &bytes, std::pair<int, int>byteRange){
+std::vector<int> get_info(std::vector<uint8_t> &bytes, std::pair<int, int>byteRange){
     std::vector<uint8_t> sub_vector = slice(bytes, byteRange.first, byteRange.second);
-    return sub_vector;
-}
+    std::vector<int> test;
+    //for(int i=0; i < get_info(bytes, bootOptions["sectors per cluster"]).size(); ++i){
+    //  test.push_back(unsigned(get_info(bytes, bootOptions["sectors per cluster"])[i]));
+    //}
 
+    for(int i=0; i < sub_vector.size(); ++i){
+        test.push_back(unsigned(sub_vector[i]));
+    }
+    return test;
+}
 
 int main() {
     std::map<std::string, std::pair<int, int>> bootOptions = {
@@ -70,15 +77,17 @@ int main() {
     size_t sectorSize = 512;
     std::cout << "work" << std::endl;
     std::vector<uint8_t> bytes = read_image_of_fat16("../hd0_just_FAT16_without_MBR.img");
-    std::vector<int> test;
+
+   // hz(get_info(bytes, bootOptions["sectors per cluster"]));
 
 
-    for(int i=0; i < get_bytes_per_sector(bytes, bootOptions["sectors per cluster"]).size(); ++i){
-        test.push_back(unsigned(get_bytes_per_sector(bytes, bootOptions["sectors per cluster"])[i]));
-    }
+
+    //for(int i=0; i < get_info(bytes, ).size(); ++i){
+      //  test.push_back(unsigned(get_info(bytes, bootOptions["sectors per cluster"])[i]));
+    //}
 
     std::cout<<"Sector size: " << sectorSize << std::endl;
-    std::cout<<"Sectors per cluster: " << set_range(test) << std::endl;
+    std::cout<<"Sectors per cluster: " << set_range(get_info(bytes, bootOptions["sectors per cluster"])) << std::endl;
     std::cout<<"Number of FATs: " << 2 << std::endl;
     std::cout<<"Number of FATs copies sectors/bytes:" << sectorSize*2 <<std::endl;
     std::cout<<"Root size:" << std::endl;
