@@ -56,15 +56,22 @@ std::vector<uint8_t> get_bytes_per_sector(std::vector<uint8_t> &bytes, std::pair
 
 
 int main() {
-    std::map<std::string, std::pair<int, int>> bootOptions = {{"text_identifier_OS", std::pair<int, int>(0,2)},
-                                                            {"machine_instruction", std::pair<int, int>(3,10)},
-                                                                    {"bytes per sector", std::pair<int, int>(11,12)},
-                    {"sectors per cluster", std::pair<int, int>(13,13)},{"size of reserved area", std::pair<int, int>(14,15)},
-                            {"number of FATs", std::pair<int, int>(16,16)},{"max number of files in root directory", std::pair<int, int>(17,18)},
-                                    {"number of sectors in the file system", std::pair<int, int>(19,20)},{"media type", std::pair<int, int>(21,21)},
-                                                              {"size of each FAT", std::pair<int, int>(22,23)},{"sectors per track in storage device", std::pair<int, int>(24,25)},
-                                                                      {"number of heads in storage device", std::pair<int, int>(26,27)}, {"number of sectors before the start partition", std::pair<int, int>(28,31)},
-                                                              {"number of sectors in the file system", std::pair<int, int>(32,35)}, {"signature value", std::pair<int, int>(510,511)}};
+    std::map<std::string, std::pair<int, int>> bootOptions = {
+            {"text_identifier_OS", std::pair<int, int>(0,2)},
+            {"machine_instruction", std::pair<int, int>(3,10)},
+            {"bytes per sector", std::pair<int, int>(11,12)},
+            {"sectors per cluster", std::pair<int, int>(13,13)},
+            {"size of reserved area", std::pair<int, int>(14,15)},
+            {"number of FATs", std::pair<int, int>(16,16)},
+            {"max number of files in root directory", std::pair<int, int>(17,18)},
+            {"number of sectors in the file system", std::pair<int, int>(19,20)},
+            {"media type", std::pair<int, int>(21,21)},
+            {"size of each FAT", std::pair<int, int>(22,23)},
+            {"sectors per track in storage device", std::pair<int, int>(24,25)},
+            {"number of heads in storage device", std::pair<int, int>(26,27)},
+            {"number of sectors before the start partition", std::pair<int, int>(28,31)},
+            {"number of sectors in the file system", std::pair<int, int>(32,35)},
+            {"signature value", std::pair<int, int>(510,511)}};
 
     size_t sectorSize = 512;
     std::cout << "work" << std::endl;
