@@ -113,15 +113,18 @@ int main() {
     std::cout<<"Number of FATs copies sectors/bytes: " << set_range(get_info(bytes, bootOptions["size of each FAT"])) <<"/"<< std::stoi( set_range(get_info(bytes, bootOptions["size of each FAT"])))*sectorSize<<std::endl;
     std::cout<<"Root size: "<< set_range(get_info(bytes, bootOptions["max number of files in root directory"])) << std::endl;
     std::cout<<"Reserved sectors: " << set_range(get_info(bytes, bootOptions["size of reserved area"])) << std::endl;
+    std::cout<<"-----------------------------------------"<<std::endl;
 
+    //getting files information
     std::vector<std::vector<uint8_t>> all_files = get_all_files(bytes, std::stoi(set_range(get_info(bytes, bootOptions["max number of files in root directory"]))));
-
-    std::cout << "Name      Size      date and time of creation/modification      attributes      number of first cluster"<<std::endl;
-
-        for (int i = 0; i < all_files.size(); ++i) {
-        std::cout<< "Name of the file   " << set_range(get_info(all_files[i], fileOption["size of file"]))<< "    " <<
-                 set_range(get_info(all_files[i], fileOption["number of first cluster"]))
-                 << std::endl;
+    for(int i=0; i<all_files.size(); ++i){
+        std::cout<<"Name of file: "<<set_range(get_info(all_files[i], fileOption["name"]))<<std::endl;
+        std::cout<<"Size of file: "<<set_range(get_info(all_files[i], fileOption["size of file"]))<<std::endl;
+        std::cout<<"Date and time of creation: "<<set_range(get_info(all_files[i], fileOption["creation time"]))<<std::endl;
+        std::cout<<"Date and time of modification: "<<set_range(get_info(all_files[i], fileOption["modified time"]))<<std::endl;
+        std::cout<<"Attributes: "<<set_range(get_info(all_files[i], fileOption["attributes"]))<<std::endl;
+        std::cout<<"Number of first cluster: "<<set_range(get_info(all_files[i], fileOption["number of first cluster"]))<<std::endl;
+        std::cout<<"-----------------------------------------"<<std::endl;
     }
 
     return 0;
