@@ -56,100 +56,110 @@ uint16_t get_data(int offset, std::vector<uint8_t> &bytes){
     return (*reinterpret_cast<uint16_t *> (bytes.data() + offset));
 }
 
-int main(){
-    std::map<std::string, std::pair<int, int>> bootOptions = {
-            {"text_identifier_OS", std::pair<int, int>(0,2)},
-            {"machine_instruction", std::pair<int, int>(3,10)},
-            {"bytes per sector", std::pair<int, int>(11,12)},
-            {"sectors per cluster", std::pair<int, int>(13,13)},
-            {"size of reserved area", std::pair<int, int>(14,15)},
-            {"number of FATs", std::pair<int, int>(16,16)},
-            {"max number of files in root directory", std::pair<int, int>(17,18)},
-            {"number of sectors in the file system", std::pair<int, int>(19,20)},
-            {"media type", std::pair<int, int>(21,21)},
-            {"size of each FAT", std::pair<int, int>(22,23)},
-            {"sectors per track in storage device", std::pair<int, int>(24,25)},
-            {"number of heads in storage device", std::pair<int, int>(26,27)},
-            {"number of sectors before the start partition", std::pair<int, int>(28,31)},
-            {"number of sectors in the file system", std::pair<int, int>(32,35)},
-            {"signature value", std::pair<int, int>(510,511)}};
+int main(int argc, char *argv[]){
+    if (argc > 1)
+    {
+        std::map<std::string, std::pair<int, int>> bootOptions = {
+                {"text_identifier_OS", std::pair<int, int>(0,2)},
+                {"machine_instruction", std::pair<int, int>(3,10)},
+                {"bytes per sector", std::pair<int, int>(11,12)},
+                {"sectors per cluster", std::pair<int, int>(13,13)},
+                {"size of reserved area", std::pair<int, int>(14,15)},
+                {"number of FATs", std::pair<int, int>(16,16)},
+                {"max number of files in root directory", std::pair<int, int>(17,18)},
+                {"number of sectors in the file system", std::pair<int, int>(19,20)},
+                {"media type", std::pair<int, int>(21,21)},
+                {"size of each FAT", std::pair<int, int>(22,23)},
+                {"sectors per track in storage device", std::pair<int, int>(24,25)},
+                {"number of heads in storage device", std::pair<int, int>(26,27)},
+                {"number of sectors before the start partition", std::pair<int, int>(28,31)},
+                {"number of sectors in the file system", std::pair<int, int>(32,35)},
+                {"signature value", std::pair<int, int>(510,511)}};
 
-    std::map<std::string, std::pair<int,int>> fileOption = {
-            {"name", std::pair<int,int>(0,7)},
-            {"extension", std::pair<int, int>(8, 10)},
-            {"attributes",std::pair<int,int>(11, 11)},
-            {"creation time", std::pair<int,int>(14,15)},
-            {"creation date", std::pair<int,int>(16,17)},
-            {"size of file", std::pair<int,int>(28,31)},
-            {"number of first cluster", std::pair<int,int>(20,21)},
-            {"modified time", std::pair<int,int>(22,23)},
-            {"modified date", std::pair<int,int>(24,25)}};
+        std::map<std::string, std::pair<int,int>> fileOption = {
+                {"name", std::pair<int,int>(0,7)},
+                {"extension", std::pair<int, int>(8, 10)},
+                {"attributes",std::pair<int,int>(11, 11)},
+                {"creation time", std::pair<int,int>(14,15)},
+                {"creation date", std::pair<int,int>(16,17)},
+                {"size of file", std::pair<int,int>(28,31)},
+                {"number of first cluster", std::pair<int,int>(20,21)},
+                {"modified time", std::pair<int,int>(22,23)},
+                {"modified date", std::pair<int,int>(24,25)}};
 
-    size_t sectorSize = 512;
-    std::vector<uint8_t> bytes = read_image_of_fat16("../hd0_just_FAT16_without_MBR.img");
+        std::vector<std::string> strs;
+        strs.assign(argv + 1, argv + argc);
 
-    std::vector<uint8_t> bytesPerSector = get_info(bytes, bootOptions["bytes per sector"]);
-    std::vector<uint8_t> reservedArea = get_info(bytes, bootOptions["size of reserved area"]);
-    std::vector<uint8_t> numberOfFATs = get_info(bytes, bootOptions["number of FATs"]);
-    std::vector<uint8_t> sizeOfEachFAT = get_info(bytes, bootOptions["size of each FAT"]);
-    std::vector<uint8_t> sectorPerCluster = get_info(bytes, bootOptions["sectors per cluster"]);
-    std::vector<uint8_t> maxNumberOfFilesInRootDirectory = get_info(bytes, bootOptions["max number of files in root directory"]);
+        size_t sectorSize = 512;
+        std::vector<uint8_t> bytes = read_image_of_fat16(strs[0]);
 
-
-    uint16_t start_point = get_data(0,bytesPerSector)
-                           * get_data(0,reservedArea)
-                           + get_data(0,numberOfFATs)
-                             *get_data(0, sizeOfEachFAT)
-                             *get_data(0,bytesPerSector);
-    std::cout<<"Files starts: " << start_point << std::endl;
+        std::vector<uint8_t> bytesPerSector = get_info(bytes, bootOptions["bytes per sector"]);
+        std::vector<uint8_t> reservedArea = get_info(bytes, bootOptions["size of reserved area"]);
+        std::vector<uint8_t> numberOfFATs = get_info(bytes, bootOptions["number of FATs"]);
+        std::vector<uint8_t> sizeOfEachFAT = get_info(bytes, bootOptions["size of each FAT"]);
+        std::vector<uint8_t> sectorPerCluster = get_info(bytes, bootOptions["sectors per cluster"]);
+        std::vector<uint8_t> maxNumberOfFilesInRootDirectory = get_info(bytes, bootOptions["max number of files in root directory"]);
 
 
-    std::cout<<"Sectors per cluster: " << get_data(0, sectorPerCluster) << std::endl;
-    std::cout<<"Number of FATs: " << get_data(0,numberOfFATs) << std::endl;
-    std::cout<<"Number of FATs copies sectors/bytes: " << get_data(0, sizeOfEachFAT) <<"/"<< get_data(0, sizeOfEachFAT)*get_data(0,bytesPerSector)<<std::endl;
-    std::cout<<"Root size: "<< get_data(0, maxNumberOfFilesInRootDirectory) << std::endl;
-    std::cout<<"Reserved sectors: " << get_data(0,reservedArea) << std::endl;
-    std::cout<<"-----------------------------------------"<<std::endl;
+        uint16_t start_point = get_data(0,bytesPerSector)
+                               * get_data(0,reservedArea)
+                               + get_data(0,numberOfFATs)
+                                 *get_data(0, sizeOfEachFAT)
+                                 *get_data(0,bytesPerSector);
+        std::cout<<"Files starts: " << start_point << std::endl;
 
 
-    //getting files information
-    std::vector<std::vector<uint8_t>> all_files = get_all_files(bytes, start_point, get_data(0, maxNumberOfFilesInRootDirectory)/32);
+        std::cout<<"Sectors per cluster: " << get_data(0, sectorPerCluster) << std::endl;
+        std::cout<<"Number of FATs: " << get_data(0,numberOfFATs) << std::endl;
+        std::cout<<"Number of FATs copies sectors/bytes: " << get_data(0, sizeOfEachFAT) <<"/"<< get_data(0, sizeOfEachFAT)*get_data(0,bytesPerSector)<<std::endl;
+        std::cout<<"Root size: "<< get_data(0, maxNumberOfFilesInRootDirectory) << std::endl;
+        std::cout<<"Reserved sectors: " << get_data(0,reservedArea) << std::endl;
+        std::cout<<"-----------------------------------------"<<std::endl;
 
-    for (int i = 0; i < all_files.size(); ++i) {
-        std::vector<uint8_t > time_creation = get_info(all_files[i], fileOption["modified time"]);
-        if(get_data(0, time_creation) != 0) {
-            std::vector<uint8_t> name = get_info(all_files[i], fileOption["name"]);
-            std::vector<uint8_t> extension = get_info(all_files[i], fileOption["extension"]);
 
-            std::cout << "file name:";
-            for (int j = 0; j < name.size(); ++j) {
-                std::cout << (char) get_data(j, name);
+        //getting files information
+        std::vector<std::vector<uint8_t>> all_files = get_all_files(bytes, start_point, get_data(0, maxNumberOfFilesInRootDirectory)/32);
+
+        for (int i = 0; i < all_files.size(); ++i) {
+            std::vector<uint8_t > time_creation = get_info(all_files[i], fileOption["modified time"]);
+            if(get_data(0, time_creation) != 0) {
+                std::vector<uint8_t> name = get_info(all_files[i], fileOption["name"]);
+                std::vector<uint8_t> extension = get_info(all_files[i], fileOption["extension"]);
+
+                std::cout << "file name:";
+                for (int j = 0; j < name.size(); ++j) {
+                    std::cout << (char) get_data(j, name);
+                }
+
+                std::cout << " file extension:";
+
+                for (int k = 0; k < extension.size(); ++k) {
+                    std::cout << (char) get_data(k, extension);
+                }
+
+
+                std::cout << "" << std::endl;
+
+                std::vector<uint8_t> sizeOfFile = get_info(all_files[i], fileOption["size of file"]);
+                std::vector<uint8_t> creationFileTime = get_info(all_files[i], fileOption["creation time"]);
+                std::vector<uint8_t> modifiedFileTime = get_info(all_files[i], fileOption["modified time"]);
+                std::vector<uint8_t> attributes = get_info(all_files[i], fileOption["attributes"]);
+                std::vector<uint8_t> numOfFirstCluster = get_info(all_files[i], fileOption["number of first cluster"]);
+
+                for(auto i: attributes){
+                    std::cout<<unsigned(i)<<std::endl;
+                }
+                std::cout << "Size of file: " << get_data(0, sizeOfFile) << std::endl;
+                std::cout << "Date and time of modification: " << get_data(0, modifiedFileTime) << std::endl;
+                //std::cout << "Attributes: " << get_data(0, attributes) << std::endl;
+                std::cout << "Number of first cluster: " << get_data(0, numOfFirstCluster) << std::endl;
+                std::cout << "-----------------------------------------" << std::endl;
             }
-
-            std::cout << " file extension:";
-
-            for (int k = 0; k < extension.size(); ++k) {
-                std::cout << (char) get_data(k, extension);
-            }
-
-
-            std::cout << "" << std::endl;
-
-            std::vector<uint8_t> sizeOfFile = get_info(all_files[i], fileOption["size of file"]);
-            std::vector<uint8_t> creationFileTime = get_info(all_files[i], fileOption["creation time"]);
-            std::vector<uint8_t> modifiedFileTime = get_info(all_files[i], fileOption["modified time"]);
-            std::vector<uint8_t> attributes = get_info(all_files[i], fileOption["attributes"]);
-            std::vector<uint8_t> numOfFirstCluster = get_info(all_files[i], fileOption["number of first cluster"]);
-
-            for(auto i: attributes){
-                std::cout<<unsigned(i)<<std::endl;
-            }
-            std::cout << "Size of file: " << get_data(0, sizeOfFile) << std::endl;
-            std::cout << "Date and time of modification: " << get_data(0, modifiedFileTime) << std::endl;
-            //std::cout << "Attributes: " << get_data(0, attributes) << std::endl;
-            std::cout << "Number of first cluster: " << get_data(0, numOfFirstCluster) << std::endl;
-            std::cout << "-----------------------------------------" << std::endl;
         }
+
+        return 0;
     }
+    std::cerr << "Please, enter name of file ";
+    return 1;
 
 }
