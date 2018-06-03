@@ -61,7 +61,7 @@ std::vector<int> convert_to_int(const std::vector<uint8_t> &v){
     return test;
 }
 
-std::vector<std::vector<uint8_t >> get_all_files(std::vector<uint8_t> &bytes, int start, int size){
+std::vector<std::vector<uint8_t >> get_all_files(std::vector<uint8_t> &bytes, uint16_t start, int size){
     std::vector<uint8_t> files = slice(bytes, start, bytes.size() - 1);
 
     int m = 0;
@@ -124,10 +124,10 @@ int main(){
 
 
     uint16_t start_point = get_data(0,bytesPerSector)
-                      * get_data(0,reservedArea)
-                      + get_data(0,numberOfFATs)
-                        *get_data(0, sizeOfEachFAT)
-                        *get_data(0,bytesPerSector);
+                           * get_data(0,reservedArea)
+                           + get_data(0,numberOfFATs)
+                             *get_data(0, sizeOfEachFAT)
+                             *get_data(0,bytesPerSector);
     std::cout<<"Files starts: " << start_point << std::endl;
 
 
@@ -137,20 +137,24 @@ int main(){
     std::cout<<"Root size: "<< get_data(0, maxNumberOfFilesInRootDirectory) << std::endl;
     std::cout<<"Reserved sectors: " << get_data(0,reservedArea) << std::endl;
     std::cout<<"-----------------------------------------"<<std::endl;
-//
-//
-//    //getting files information
-//    std::vector<std::vector<uint8_t>> all_files = get_all_files(bytes, start_point, std::stoi(set_range(convert_to_int(get_info(bytes, bootOptions["max number of files in root directory"])))));
-//    for(int i=0; i<all_files.size(); ++i){
-//        for (int j = 0; j < get_info(all_files[i], fileOption["name"]).size(); ++j) {
-//            std::cout<< (char) get_info(all_files[i], fileOption["name"])[i] << std::endl;
-//
-//        }
-////        std::cout<<"Size of file: "<<set_range(get_info(all_files[i], fileOption["size of file"]))<<std::endl;
-////        std::cout<<"Date and time of creation: "<<set_range(get_info(all_files[i], fileOption["creation time"]))<<std::endl;
-////        std::cout<<"Date and time of modification: "<<set_range(get_info(all_files[i], fileOption["modified time"]))<<std::endl;
-////        std::cout<<"Attributes: "<<set_range(get_info(all_files[i], fileOption["attributes"]))<<std::endl;
-////        std::cout<<"Number of first cluster: "<<set_range(get_info(all_files[i], fileOption["number of first cluster"]))<<std::endl;
-////        std::cout<<"-----------------------------------------"<<std::endl;
-//        }
+
+    //getting files information
+    std::vector<std::vector<uint8_t>> all_files = get_all_files(bytes, start_point, std::stoi(set_range(convert_to_int(get_info(bytes, bootOptions["max number of files in root directory"])))));
+    for(int i=0; i<all_files.size(); ++i){
+
+
+        std::vector<uint8_t> sizeOfFile = get_info(bytes, fileOption["size of file"]);
+        std::vector<uint8_t> creationFileTime = get_info(bytes, fileOption["creation time"]);
+        std::vector<uint8_t> modifiedFileTime = get_info(bytes, fileOption["modified time"]);
+        std::vector<uint8_t> attributes = get_info(bytes, fileOption["attributes"]);
+        std::vector<uint8_t> numOfFirstCluster = get_info(bytes, fileOption["number of first cluster"]);
+
+
+        std::cout<<"Size of file: "<<get_data(0, sizeOfFile)<<std::endl;
+        std::cout<<"Date and time of creation: "<<get_data(0, creationFileTime)<<std::endl;
+        std::cout<<"Date and time of modification: "<<get_data(0, modifiedFileTime)<<std::endl;
+        std::cout<<"Attributes: "<<get_data(0, attributes)<<std::endl;
+        std::cout<<"Number of first cluster: "<<get_data(0, numOfFirstCluster)<<std::endl;
+        std::cout<<"-----------------------------------------"<<std::endl;
+        }
 }
