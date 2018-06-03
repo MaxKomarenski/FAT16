@@ -97,10 +97,10 @@ int main(){
 
 
     uint16_t start_point = get_data(0,bytesPerSector)
-                      * get_data(0,reservedArea)
-                      + get_data(0,numberOfFATs)
-                        *get_data(0, sizeOfEachFAT)
-                        *get_data(0,bytesPerSector);
+                           * get_data(0,reservedArea)
+                           + get_data(0,numberOfFATs)
+                             *get_data(0, sizeOfEachFAT)
+                             *get_data(0,bytesPerSector);
     std::cout<<"Files starts: " << start_point << std::endl;
 
 
@@ -116,38 +116,40 @@ int main(){
     std::vector<std::vector<uint8_t>> all_files = get_all_files(bytes, start_point, get_data(0, maxNumberOfFilesInRootDirectory)/32);
 
     for (int i = 0; i < all_files.size(); ++i) {
+        std::vector<uint8_t > time_creation = get_info(all_files[i], fileOption["modified time"]);
+        if(get_data(0, time_creation) != 0) {
+            std::vector<uint8_t> name = get_info(all_files[i], fileOption["name"]);
+            std::vector<uint8_t> extension = get_info(all_files[i], fileOption["extension"]);
 
-        std::vector<uint8_t> name = get_info(all_files[i], fileOption["name"]);
-        std::vector<uint8_t> extension = get_info(all_files[i], fileOption["extension"]);
+            std::cout << "file name:";
+            for (int j = 0; j < name.size(); ++j) {
+                std::cout << (char) get_data(j, name);
+            }
+
+            std::cout << " file extension:";
+
+            for (int k = 0; k < extension.size(); ++k) {
+                std::cout << (char) get_data(k, extension);
+            }
 
 
-        for (int j = 0; j < name.size(); ++j) {
-            std::cout << (char) get_data(j, name);
+            std::cout << "" << std::endl;
+
+            std::vector<uint8_t> sizeOfFile = get_info(all_files[i], fileOption["size of file"]);
+            std::vector<uint8_t> creationFileTime = get_info(all_files[i], fileOption["creation time"]);
+            std::vector<uint8_t> modifiedFileTime = get_info(all_files[i], fileOption["modified time"]);
+            std::vector<uint8_t> attributes = get_info(all_files[i], fileOption["attributes"]);
+            std::vector<uint8_t> numOfFirstCluster = get_info(all_files[i], fileOption["number of first cluster"]);
+
+            for(auto i: attributes){
+                std::cout<<unsigned(i)<<std::endl;
+            }
+            std::cout << "Size of file: " << get_data(0, sizeOfFile) << std::endl;
+            std::cout << "Date and time of modification: " << get_data(0, modifiedFileTime) << std::endl;
+            //std::cout << "Attributes: " << get_data(0, attributes) << std::endl;
+            std::cout << "Number of first cluster: " << get_data(0, numOfFirstCluster) << std::endl;
+            std::cout << "-----------------------------------------" << std::endl;
         }
-
-        std::cout << ".";
-
-        for (int k  = 0; k < extension.size(); ++k){
-            std::cout << (char) get_data(k, extension);
-        }
-
-
-        std::cout << "" << std::endl;
-
-        std::vector<uint8_t> sizeOfFile = get_info(all_files[i], fileOption["size of file"]);
-        std::vector<uint8_t> creationFileTime = get_info(all_files[i], fileOption["creation time"]);
-        std::vector<uint8_t> modifiedFileTime = get_info(all_files[i], fileOption["modified time"]);
-        std::vector<uint8_t> attributes = get_info(all_files[i], fileOption["attributes"]);
-        std::vector<uint8_t> numOfFirstCluster = get_info(all_files[i], fileOption["number of first cluster"]);
-
-
-        std::cout<<"Size of file: "<<get_data(0, sizeOfFile)<<std::endl;
-        std::cout<<"Date and time of creation: "<<get_data(0, creationFileTime)<<std::endl;
-        std::cout<<"Date and time of modification: "<<get_data(0, modifiedFileTime)<<std::endl;
-        std::cout<<"Attributes: "<<get_data(0, attributes)<<std::endl;
-        std::cout<<"Number of first cluster: "<<get_data(0, numOfFirstCluster)<<std::endl;
-        std::cout<<"-----------------------------------------"<<std::endl;
-
     }
 
 }
