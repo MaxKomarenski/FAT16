@@ -7,6 +7,7 @@
 #include <iterator>
 #include <algorithm>
 
+
 std::vector<uint8_t> read_image_of_fat16(const std::string &name_of_file){
     std::vector<uint8_t> bytes;
     std::ifstream file(name_of_file.c_str(), std::ios::binary);
@@ -56,8 +57,9 @@ uint16_t get_data(int offset, std::vector<uint8_t> &bytes){
     return (*reinterpret_cast<uint16_t *> (bytes.data() + offset));
 }
 
+
 int main(int argc, char *argv[]){
-    if (argc > 1)
+    if (argc >= 1)
     {
         std::map<std::string, std::pair<int, int>> bootOptions = {
                 {"text_identifier_OS", std::pair<int, int>(0,2)},
@@ -146,9 +148,15 @@ int main(int argc, char *argv[]){
                 std::vector<uint8_t> attributes = get_info(all_files[i], fileOption["attributes"]);
                 std::vector<uint8_t> numOfFirstCluster = get_info(all_files[i], fileOption["number of first cluster"]);
 
-                for(auto i: attributes){
+                uint16_t atributes;
+                std::copy(attributes.begin(), attributes.end(), reinterpret_cast<uint8_t*>(&atributes));
+
+
+                /*for(auto i: attributes){
                     std::cout<<unsigned(i)<<std::endl;
-                }
+                }*/
+                bool res = (atributes & 0x20) > 0; //TODO check for every attr
+                std::cout<<res<<std::endl;
                 std::cout << "Size of file: " << get_data(0, sizeOfFile) << std::endl;
                 std::cout << "Date and time of modification: " << get_data(0, modifiedFileTime) << std::endl;
                 //std::cout << "Attributes: " << get_data(0, attributes) << std::endl;
