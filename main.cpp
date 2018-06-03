@@ -7,7 +7,6 @@
 #include <iterator>
 #include <algorithm>
 
-
 std::vector<uint8_t> read_image_of_fat16(const std::string &name_of_file){
     std::vector<uint8_t> bytes;
     std::ifstream file(name_of_file.c_str(), std::ios::binary);
@@ -20,13 +19,14 @@ std::vector<uint8_t> read_image_of_fat16(const std::string &name_of_file){
     return bytes;
 }
 
-std::vector<uint8_t> slice(std::vector<uint8_t> &vector, int m, int n) {
+std::vector<uint8_t> slice(const std::vector<uint8_t> &vector, int m, int n) {
     auto first = vector.cbegin() + m;
     auto last = vector.cbegin() + n + 1;
 
     std::vector<uint8_t> vec(first,last);
     return vec;
 }
+
 
 std::string set_range(std::vector<int> indexes){
     std::ostringstream oss;
@@ -46,18 +46,23 @@ std::string set_range(std::vector<int> indexes){
     return result;
 }
 
-std::vector<int> get_info(std::vector<uint8_t> &bytes, std::pair<int, int>byteRange){
+std::vector<uint8_t> get_info(std::vector<uint8_t> &bytes, std::pair<int, int>byteRange){
     std::vector<uint8_t> sub_vector = slice(bytes, byteRange.first, byteRange.second);
+    return sub_vector;
+}
+
+std::vector<int> convert_to_int(const std::vector<uint8_t> &v){
     std::vector<int> test;
 
-    for (unsigned char i : sub_vector) {
+    for (unsigned char i : v) {
         test.push_back(unsigned(i));
     }
+
     return test;
 }
 
-std::vector<std::vector<uint8_t >> get_all_files(std::vector<uint8_t> &bytes, int size){
-    std::vector<uint8_t> files = slice(bytes, 17921, bytes.size() - 1);
+std::vector<std::vector<uint8_t >> get_all_files(std::vector<uint8_t> &bytes, int start, int size){
+    std::vector<uint8_t> files = slice(bytes, start, bytes.size() - 1);
 
     int m = 0;
     int n = 31;
@@ -75,7 +80,7 @@ std::vector<std::vector<uint8_t >> get_all_files(std::vector<uint8_t> &bytes, in
     return all_files;
 }
 
-int main() {
+int main(){
     std::map<std::string, std::pair<int, int>> bootOptions = {
             {"text_identifier_OS", std::pair<int, int>(0,2)},
             {"machine_instruction", std::pair<int, int>(3,10)},
@@ -93,9 +98,8 @@ int main() {
             {"number of sectors in the file system", std::pair<int, int>(32,35)},
             {"signature value", std::pair<int, int>(510,511)}};
 
-
     std::map<std::string, std::pair<int,int>> fileOption = {
-            {"name", std::pair<int,int>(0,10)},
+            {"name", std::pair<int,int>(1,10)},
             {"attributes",std::pair<int,int>(11, 11)},
             {"creation time", std::pair<int,int>(14,15)},
             {"creation date", std::pair<int,int>(16,17)},
@@ -107,25 +111,34 @@ int main() {
     size_t sectorSize = 512;
     std::vector<uint8_t> bytes = read_image_of_fat16("../hd0_just_FAT16_without_MBR.img");
 
+    int start_point = std::stoi(set_range(convert_to_int(get_info(bytes, bootOptions["bytes per sector"]))))
+                      * std::stoi(set_range(convert_to_int(get_info(bytes, bootOptions["size of reserved area"]))))
+                      + std::stoi(set_range(convert_to_int(get_info(bytes, bootOptions["number of FATs"]))))
+                        *std::stoi(set_range(convert_to_int(get_info(bytes, bootOptions["size of each FAT"]))))
+                        *std::stoi(set_range(convert_to_int(get_info(bytes, bootOptions["bytes per sector"]))));
+    std::cout<<"Files starts: " << start_point << std::endl;
     std::cout<<"Sector size: " << sectorSize << std::endl;
-    std::cout<<"Sectors per cluster: " << set_range(get_info(bytes, bootOptions["sectors per cluster"])) << std::endl;
-    std::cout<<"Number of FATs: " << set_range(get_info(bytes, bootOptions["number of FATs"])) << std::endl;
-    std::cout<<"Number of FATs copies sectors/bytes: " << set_range(get_info(bytes, bootOptions["size of each FAT"])) <<"/"<< std::stoi( set_range(get_info(bytes, bootOptions["size of each FAT"])))*sectorSize<<std::endl;
-    std::cout<<"Root size: "<< set_range(get_info(bytes, bootOptions["max number of files in root directory"])) << std::endl;
-    std::cout<<"Reserved sectors: " << set_range(get_info(bytes, bootOptions["size of reserved area"])) << std::endl;
+
+
+    std::cout<<"Sectors per cluster: " << set_range(convert_to_int(get_info(bytes, bootOptions["sectors per cluster"]))) << std::endl;
+    std::cout<<"Number of FATs: " << set_range(convert_to_int(get_info(bytes, bootOptions["number of FATs"]))) << std::endl;
+    std::cout<<"Number of FATs copies sectors/bytes: " << set_range(convert_to_int(get_info(bytes, bootOptions["size of each FAT"]))) <<"/"<< std::stoi( set_range(convert_to_int(get_info(bytes, bootOptions["size of each FAT"]))))*sectorSize<<std::endl;
+    std::cout<<"Root size: "<< set_range(convert_to_int(get_info(bytes, bootOptions["max number of files in root directory"]))) << std::endl;
+    std::cout<<"Reserved sectors: " << set_range(convert_to_int(get_info(bytes, bootOptions["size of reserved area"]))) << std::endl;
     std::cout<<"-----------------------------------------"<<std::endl;
 
     //getting files information
-    std::vector<std::vector<uint8_t>> all_files = get_all_files(bytes, std::stoi(set_range(get_info(bytes, bootOptions["max number of files in root directory"]))));
+    std::vector<std::vector<uint8_t>> all_files = get_all_files(bytes, start_point, std::stoi(set_range(convert_to_int(get_info(bytes, bootOptions["max number of files in root directory"])))));
     for(int i=0; i<all_files.size(); ++i){
-        std::cout<<"Name of file: "<<set_range(get_info(all_files[i], fileOption["name"]))<<std::endl;
-        std::cout<<"Size of file: "<<set_range(get_info(all_files[i], fileOption["size of file"]))<<std::endl;
-        std::cout<<"Date and time of creation: "<<set_range(get_info(all_files[i], fileOption["creation time"]))<<std::endl;
-        std::cout<<"Date and time of modification: "<<set_range(get_info(all_files[i], fileOption["modified time"]))<<std::endl;
-        std::cout<<"Attributes: "<<set_range(get_info(all_files[i], fileOption["attributes"]))<<std::endl;
-        std::cout<<"Number of first cluster: "<<set_range(get_info(all_files[i], fileOption["number of first cluster"]))<<std::endl;
-        std::cout<<"-----------------------------------------"<<std::endl;
-    }
+        for (int j = 0; j < get_info(all_files[i], fileOption["name"]).size(); ++j) {
+            std::cout<< (char) get_info(all_files[i], fileOption["name"])[i] << std::endl;
 
-    return 0;
+        }
+//        std::cout<<"Size of file: "<<set_range(get_info(all_files[i], fileOption["size of file"]))<<std::endl;
+//        std::cout<<"Date and time of creation: "<<set_range(get_info(all_files[i], fileOption["creation time"]))<<std::endl;
+//        std::cout<<"Date and time of modification: "<<set_range(get_info(all_files[i], fileOption["modified time"]))<<std::endl;
+//        std::cout<<"Attributes: "<<set_range(get_info(all_files[i], fileOption["attributes"]))<<std::endl;
+//        std::cout<<"Number of first cluster: "<<set_range(get_info(all_files[i], fileOption["number of first cluster"]))<<std::endl;
+//        std::cout<<"-----------------------------------------"<<std::endl;
+        }
 }
