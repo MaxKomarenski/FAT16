@@ -4,6 +4,7 @@
 #include <sstream>
 #include <cstring>
 #include <map>
+#include <vector>
 #include <iterator>
 #include <algorithm>
 
@@ -57,9 +58,39 @@ uint16_t get_data(int offset, std::vector<uint8_t> &bytes){
     return (*reinterpret_cast<uint16_t *> (bytes.data() + offset));
 }
 
+std::string get_str(std::vector<uint8_t > objects){
+    std::string result;
+    for (int j = 0; j < objects.size(); ++j) {
+        result += (char) get_data(j, objects);
+    }
+    return result;
+}
+
+std::string check_attr(std::vector<uint8_t> attrs){
+    uint16_t atributes;
+    std::string result;
+    std::copy(attrs.begin(), attrs.end(), reinterpret_cast<uint8_t*>(&atributes));
+    std::vector<std::string> formats = {"R-Only ", " Hidden ",
+                                " SysFile ", " VolumL ", " LongFileName ", " Dir ", " Archive "};
+    std::map<unsigned  char, bool> types = {{0x01,false},{0x02,false},
+            {0x04, false},{0x08,false},{0x0f,false},{0x10,false},{0x20,false}};
+    int counter = 0;
+    for(auto t: types){
+        if((atributes & t.first) > 0){
+            t.second= true;
+        }
+        if(t.second == true){
+            result += formats[counter];
+        }
+        counter++;
+    }
+
+    return result;
+}
+
 
 int main(int argc, char *argv[]){
-    if (argc >= 1)
+    if (argc > 1)
     {
         std::map<std::string, std::pair<int, int>> bootOptions = {
                 {"text_identifier_OS", std::pair<int, int>(0,2)},
@@ -108,9 +139,7 @@ int main(int argc, char *argv[]){
                                + get_data(0,numberOfFATs)
                                  *get_data(0, sizeOfEachFAT)
                                  *get_data(0,bytesPerSector);
-        std::cout<<"Files starts: " << start_point << std::endl;
-
-
+        std::cout<<"Sector size: " << get_data(0,bytesPerSector) << std::endl;
         std::cout<<"Sectors per cluster: " << get_data(0, sectorPerCluster) << std::endl;
         std::cout<<"Number of FATs: " << get_data(0,numberOfFATs) << std::endl;
         std::cout<<"Number of FATs copies sectors/bytes: " << get_data(0, sizeOfEachFAT) <<"/"<< get_data(0, sizeOfEachFAT)*get_data(0,bytesPerSector)<<std::endl;
@@ -125,41 +154,20 @@ int main(int argc, char *argv[]){
         for (int i = 0; i < all_files.size(); ++i) {
             std::vector<uint8_t > time_creation = get_info(all_files[i], fileOption["modified time"]);
             if(get_data(0, time_creation) != 0) {
+
+
                 std::vector<uint8_t> name = get_info(all_files[i], fileOption["name"]);
                 std::vector<uint8_t> extension = get_info(all_files[i], fileOption["extension"]);
-
-                std::cout << "file name:";
-                for (int j = 0; j < name.size(); ++j) {
-                    std::cout << (char) get_data(j, name);
-                }
-
-                std::cout << " file extension:";
-
-                for (int k = 0; k < extension.size(); ++k) {
-                    std::cout << (char) get_data(k, extension);
-                }
-
-
-                std::cout << "" << std::endl;
-
                 std::vector<uint8_t> sizeOfFile = get_info(all_files[i], fileOption["size of file"]);
                 std::vector<uint8_t> creationFileTime = get_info(all_files[i], fileOption["creation time"]);
                 std::vector<uint8_t> modifiedFileTime = get_info(all_files[i], fileOption["modified time"]);
                 std::vector<uint8_t> attributes = get_info(all_files[i], fileOption["attributes"]);
                 std::vector<uint8_t> numOfFirstCluster = get_info(all_files[i], fileOption["number of first cluster"]);
 
-                uint16_t atributes;
-                std::copy(attributes.begin(), attributes.end(), reinterpret_cast<uint8_t*>(&atributes));
-
-
-                /*for(auto i: attributes){
-                    std::cout<<unsigned(i)<<std::endl;
-                }*/
-                bool res = (atributes & 0x20) > 0; //TODO check for every attr
-                std::cout<<res<<std::endl;
+                std::cout<<"Filename:"<<get_str(name)<<"file extension:"<<get_str(extension)<<std::endl;
                 std::cout << "Size of file: " << get_data(0, sizeOfFile) << std::endl;
                 std::cout << "Date and time of modification: " << get_data(0, modifiedFileTime) << std::endl;
-                //std::cout << "Attributes: " << get_data(0, attributes) << std::endl;
+                std::cout << "Attributes: " << check_attr(attributes) << std::endl;
                 std::cout << "Number of first cluster: " << get_data(0, numOfFirstCluster) << std::endl;
                 std::cout << "-----------------------------------------" << std::endl;
             }
@@ -167,7 +175,7 @@ int main(int argc, char *argv[]){
 
         return 0;
     }
-    std::cerr << "Please, enter name of file ";
+    std::cerr << "Error: Please, enter name of file ";
     return 1;
 
 }
